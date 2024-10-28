@@ -37,6 +37,6 @@ The username is `beepy` and the password is `beepbeep`. You should change this f
 
 ## Building SD card image from source
 
-Run `./build-image.sh`. This will download Buildroot and build a Beepberry SD card image at `buildroot/output/images/sdcard.img`.
+- ☁️ Cloud: Run the Github Actions build, wait approximately 3 hours, download the `sdcard.img` file.
 
-For subsequent builds you can just run `make -j $(nproc)` from the `buildroot` directory.
+- 💻 Local: For advice about local builds, see the [README in the docker subdirectory](./docker/README.md).

@@ -8,22 +8,24 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
+
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         submodules: True
-    - name: Install packages
+
+    - name: Build docker image
+      run: docker build --platform linux/amd64 --file docker/Dockerfile --tag buildroot-os-builder .
+
+    - name: Build Buildroot OS image for SD card using docker
       run: |
-        sudo apt-get update
-        sudo apt-get install -y make gcc g++ unzip git bc python device-tree-compiler mtd-utils
-    - name: Build image
-      run: |
-        ./build-image.sh
+        docker run --platform linux/amd64 --name my-beepy-buildroot buildroot-os-builder ./build-image.sh
+        docker cp my-beepy-buildroot:/home/builder/beepy-buildroot/buildroot/output/images/sdcard.img ./sdcard.img
+
     - name: Upload SD card image
       uses: actions/upload-artifact@v4
       with:
         name: sdcard.img
-        path: buildroot/output/images/sdcard.img
-
+        path: sdcard.img

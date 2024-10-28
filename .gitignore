@@ -1,2 +1,3 @@
 /buildroot/
 /root_overlay/var/lib/iwd/*.psk
+sdcard.img
