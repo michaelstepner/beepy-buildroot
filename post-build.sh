@@ -73,3 +73,6 @@ for python_dir in ${TARGET_DIR}/usr/lib/python3.*; do
 		done
 	fi
 done
+
+# Point DNS entries in resolv.conf to file managed by NetworkManager
+ln -sf ../run/NetworkManager/resolv.conf ${TARGET_DIR}/etc/resolv.conf
