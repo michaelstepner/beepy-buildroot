@@ -16,6 +16,28 @@ jobs:
       with:
         submodules: True
 
+    - name: Disable Buildroot compiler cache to reduce disk space usage
+      run: sed -i '/^BR2_CCACHE=y$/d' br_defconfig
+
+    - name: Set up BTRFS file system with compression
+      run: |
+        df -h
+        dd if=/dev/zero of=../virtual_disk.img bs=1M count=12288
+        sudo mkfs.btrfs ../virtual_disk.img
+        sudo mkdir /mnt/virtual-btrfs
+        sudo mount -o loop,compress=zstd ../virtual_disk.img /mnt/virtual-btrfs
+        df -h
+
+    - name: Configure Docker to store containers on BTRFS file system
+      run: |
+        # The compression allows us to store more data than the physical disk space
+        # which works around the limit provided by default Github Actions runners.
+        # Without this workaround, we would narrowly run out of space.
+        sudo systemctl stop docker
+        jq '. + { "storage-driver": "btrfs", "data-root": "/mnt/virtual-btrfs" }' /etc/docker/daemon.json | sudo tee /etc/docker/daemon.json.tmp && sudo mv /etc/docker/daemon.json.tmp /etc/docker/daemon.json
+        sudo systemctl start docker
+        docker info
+
     - name: Build docker image
       run: docker build --platform linux/amd64 --file docker/Dockerfile --tag buildroot-os-builder .
 
@@ -23,6 +45,12 @@ jobs:
       run: |
         docker run --platform linux/amd64 --name my-beepy-buildroot buildroot-os-builder ./build-image.sh
         docker cp my-beepy-buildroot:/home/builder/beepy-buildroot/buildroot/output/images/sdcard.img ./sdcard.img
+
+    - name: Check disk space usage
+      run: |
+        df -h
+        sudo btrfs filesystem usage /mnt/virtual-btrfs
+        sudo btrfs filesystem df /mnt/virtual-btrfs
 
     - name: Upload SD card image
       uses: actions/upload-artifact@v4
