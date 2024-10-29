@@ -76,3 +76,7 @@ done
 
 # Point DNS entries in resolv.conf to file managed by NetworkManager
 ln -sf ../run/NetworkManager/resolv.conf ${TARGET_DIR}/etc/resolv.conf
+
+# Reduce verbosity of kernel messages printed to the terminal
+echo 'kernel.printk = 3 4 1 3' >> ${TARGET_DIR}/etc/sysctl.conf
+chmod 644 ${TARGET_DIR}/etc/sysctl.conf
