@@ -16,7 +16,7 @@ fi
 
 # Download Buildroot
 if [ ! -d buildroot ]; then
-  curl https://buildroot.org/downloads/buildroot-2024.02.tar.xz | tar xJ
+  curl https://buildroot.org/downloads/buildroot-2024.02.7.tar.xz | tar xJ
   mv buildroot-* buildroot
 fi
 
