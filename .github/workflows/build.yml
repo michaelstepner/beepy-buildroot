@@ -30,9 +30,9 @@ jobs:
 
     - name: Configure Docker to store containers on BTRFS file system
       run: |
-        # The compression allows us to store more data than the physical disk space
-        # which works around the limit provided by default Github Actions runners.
-        # Without this workaround, we would narrowly run out of space.
+        # The compression allows us to store more data than the physical disk space,
+        # which ensures we don't exceed the space provided on GitHub-hosted runners.
+        # The disk space available is smaller in private repos than in public repos.
         sudo systemctl stop docker
         jq '. + { "storage-driver": "btrfs", "data-root": "/mnt/virtual-btrfs" }' /etc/docker/daemon.json | sudo tee /etc/docker/daemon.json.tmp && sudo mv /etc/docker/daemon.json.tmp /etc/docker/daemon.json
         sudo systemctl start docker
