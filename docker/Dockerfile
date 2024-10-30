@@ -12,7 +12,7 @@ RUN apt-get update \
     build-essential libncurses5-dev \
     git bzr cvs mercurial subversion libc6 unzip bc \
     make gcc g++ device-tree-compiler mtd-utils \
-    wget curl file \
+    wget curl file jq \
     cpio rsync \
     locales \
     && apt-get -q -y autoremove \

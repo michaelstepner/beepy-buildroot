@@ -5,6 +5,49 @@ on:
     tags:
       - '*'
   workflow_dispatch:
+    inputs:
+      timezone:
+        type: choice
+        description: Time zone
+        options:
+          - Hawaii
+          - Alaska
+          - Pacific Time (US and Canada)
+          - Mountain Time (US and Canada)
+          - Central Time (US and Canada)
+          - Eastern Time (US and Canada)
+          - Atlantic Time (Canada)
+          - Newfoundland (Canada)
+          - UTC
+          - Western European Time
+          - Central European Time
+          - Eastern European Time
+          - Israel
+          - Moscow Time
+          - India
+          - China
+          - Japan
+          - Korea
+          - New Zealand
+        default: 'UTC'
+      fontsize:
+        type: choice
+        description: Terminal font size
+        options:
+          - small (50 cols x 30 rows)
+          - larger (50 cols x 15 rows)
+      hostname:
+        description: "Hostname (default=buildroot)"
+      wifi_ssid:
+        description: Wifi network name (optional)
+      wifi_password:
+        description: Wifi network password (optional)
+      ssh_authorized_key:
+        description: SSH authorized public key (optional)
+      max_2_cores:
+        description: Max 2 cores to limit peak power use
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -15,6 +58,25 @@ jobs:
       uses: actions/checkout@v4
       with:
         submodules: True
+
+    - name: Note in GHA Summary that this is a vanilla build
+      run: |
+        echo "🔨 Creating a vanilla Buildroot OS image with no customization." | tee -a $GITHUB_STEP_SUMMARY
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ github.repository_visibility }}" != "private" ]; then
+          echo "" | tee -a $GITHUB_STEP_SUMMARY
+          echo 'NOTE: This GitHub Action will only apply customization settings in a *private* GitHub repository.' | tee -a $GITHUB_STEP_SUMMARY
+        fi
+      if: github.event_name != 'workflow_dispatch' || github.event.repository.visibility != 'private'
+
+    - name: Store inputs as a config file and print customization settings to GHA Summary
+      run: |
+        echo '${{ toJSON(inputs) }}' > customization.json
+        echo '###🛠️ Customization settings' | tee -a $GITHUB_STEP_SUMMARY
+        echo '' | tee -a $GITHUB_STEP_SUMMARY
+        echo '```yaml' >> $GITHUB_STEP_SUMMARY
+        cat customization.json | tee -a $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+      if: github.event_name == 'workflow_dispatch' && github.event.repository.visibility == 'private'
 
     - name: Disable Buildroot compiler cache to reduce disk space usage
       run: sed -i '/^BR2_CCACHE=y$/d' br_defconfig
