@@ -74,7 +74,7 @@ jobs:
     - name: Store inputs as a config file and print customization settings to GHA Summary
       run: |
         echo '${{ toJSON(inputs) }}' > customization.json
-        echo '###🛠️ Customization settings' | tee -a $GITHUB_STEP_SUMMARY
+        echo '### 🛠️ Customization settings' | tee -a $GITHUB_STEP_SUMMARY
         echo '' | tee -a $GITHUB_STEP_SUMMARY
         echo '```yaml' >> $GITHUB_STEP_SUMMARY
         cat customization.json | tee -a $GITHUB_STEP_SUMMARY
