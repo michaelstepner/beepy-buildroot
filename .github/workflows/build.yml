@@ -52,6 +52,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
     steps:
 
     - name: Checkout repository
@@ -114,8 +117,26 @@ jobs:
         sudo btrfs filesystem usage /mnt/virtual-btrfs
         sudo btrfs filesystem df /mnt/virtual-btrfs
 
-    - name: Upload SD card image
+    - name: Upload SD card image as GitHub Actions artifact
       uses: actions/upload-artifact@v4
       with:
         name: sdcard.img
         path: sdcard.img
+      if: github.event_name == 'workflow_dispatch' 
+
+    - name: Upload SD card image as a new GitHub Release
+      run: |
+        zip sdcard.img.zip sdcard.img && rm sdcard.img
+        RELEASE_URL=$(gh release create "${{ github.ref_name }}" sdcard.img.zip \
+          --notes $'The default username is "beepy" and the default password is "beepbeep".\n\n⚠️ You should change the password using `passwd` and disable password-based SSH authentication as soon as possible for security.' \
+          --generate-notes \
+          --latest)
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "📦 Uploaded release: [${{ github.ref_name }}]($RELEASE_URL)" >> $GITHUB_STEP_SUMMARY
+
+        echo "📦 Uploaded release ${{ github.ref_name }}:"
+        echo "$RELEASE_URL"
+      env:
+        GH_TOKEN: ${{ github.token }}
+      if: github.event_name != 'workflow_dispatch' 
