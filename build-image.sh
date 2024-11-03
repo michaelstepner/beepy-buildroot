@@ -1,6 +1,8 @@
 #!/bin/sh
 set -e
 
+buildroot_version="2024.02.7"
+
 # Apply customizations
 if [ -f customization.json ]; then
   echo "Applying customizations..."
@@ -41,7 +43,7 @@ fi
 # Download Buildroot
 echo "Downloading Buildroot OS..."
 if [ ! -d buildroot ]; then
-  curl https://buildroot.org/downloads/buildroot-2024.02.7.tar.xz | tar xJ
+  curl "https://buildroot.org/downloads/buildroot-$buildroot_version.tar.xz" | tar xJ
   mv buildroot-* buildroot
 fi
 echo ""
