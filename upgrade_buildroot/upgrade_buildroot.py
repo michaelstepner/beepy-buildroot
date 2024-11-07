@@ -8,6 +8,7 @@ def find_latest_buildroot_LTS(url: str = "https://buildroot.org/downloads/") -> 
     # Scrape URL
     response = requests.get(url)
     response.raise_for_status()
+    print(f"## Checking releases at {url}")
 
     # Parse the HTML
     soup = BeautifulSoup(response.text, 'html.parser')
@@ -30,8 +31,8 @@ def find_latest_buildroot_LTS(url: str = "https://buildroot.org/downloads/") -> 
     # Find the latest version
     if buildroot_versions:
         latest_version = max(buildroot_versions, key=lambda x: (x[0], x[1]))
-        print(f"Latest LTS version: {latest_version[2]}")
-        print(f"Released on: {latest_version[3]}")
+        print(f"- Latest LTS version: {latest_version[2]}")
+        print(f"- Released on: {latest_version[3]}")
         if latest_version[1] == 0:
             return f"{latest_version[0]}.02"
         else:
@@ -60,9 +61,9 @@ def update_script(latest_version: str, script_path: str = "build-image.sh") -> N
 
     if updated:
         if changed:
-            print(f"🆕 {script_path} updated to use the latest buildroot LTS version")
+            print(f"\n🆕 {script_path} updated to use the latest buildroot LTS version")
         else:
-            print(f"✅ Already using the latest buildroot LTS version in {script_path}")
+            print(f"\n✅ Already using the latest buildroot LTS version in {script_path}")
     else:
         raise ValueError(f"Could not find the buildroot_version line in {script_path}")
 
