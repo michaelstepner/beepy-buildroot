@@ -1,0 +1,132 @@
+name: Upgrade buildroot
+
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+env:
+  BRANCH_NAME: buildroot-upgrade
+
+jobs:
+  upgrade_buildroot:
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+
+      #######################
+      # Configure
+      #######################
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create/checkout new branch
+        run: |
+          branch_exists=$(git ls-remote --heads origin $BRANCH_NAME | wc -l)
+          if [ $branch_exists -eq 1 ]; then
+            git remote set-branches origin $BRANCH_NAME
+            git fetch --depth 1 origin $BRANCH_NAME
+            git checkout $BRANCH_NAME
+          else
+            git checkout -b $BRANCH_NAME
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install requests beautifulsoup4
+
+      #######################
+      # Upgrade
+      #######################
+
+      - name: Upgrade buildroot
+        run: ./upgrade_buildroot/upgrade_buildroot.py | tee -a $GITHUB_STEP_SUMMARY
+
+      #######################
+      # Push
+      #######################
+
+      - name: Check if there are changes
+        id: diff
+        run: |
+          set +e
+          test -z "$(git status --porcelain build-image.sh)"
+          echo "VERSION_UPDATED=$?" >> $GITHUB_OUTPUT
+
+          version_number=$(sed -n 's/^buildroot_version="\([^"]*\)"/\1/p' build-image.sh)
+          echo "VERSION_NUMBER=$version_number" >> $GITHUB_OUTPUT
+
+      - name: Commit new data and push to Github
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email github-actions@github.com
+
+          git add build-image.sh
+
+          branch_exists=$(git ls-remote --heads origin $BRANCH_NAME | wc -l)
+          if [ $branch_exists -eq 1 ]; then
+            git branch --set-upstream-to origin/$BRANCH_NAME
+            git pull --ff-only
+            git commit -m "chore: upgrade buildroot to ${{ steps.diff.outputs.VERSION_NUMBER }}"
+            git push origin $BRANCH_NAME
+          else
+            git commit -m "chore: upgrade buildroot to ${{ steps.diff.outputs.VERSION_NUMBER }}"
+            git push --set-upstream origin $BRANCH_NAME
+          fi
+        if: steps.diff.outputs.VERSION_UPDATED == 1
+
+      #######################
+      # Pull Request
+      #######################
+
+      - name: Get existing PR number if it exists
+        id: pr
+        run: |
+          echo "EXISTING_PR_NUM=$(gh pr list --head $BRANCH_NAME | sed 's/^\([0-9]*\).*/\1/g' | head -n 1)" >> $GITHUB_OUTPUT
+          echo "PR_TITLE=chore: upgrade buildroot to ${{ steps.diff.outputs.VERSION_NUMBER }}" >> $GITHUB_OUTPUT
+          echo "PR_BODY=<p>Upgrade to the latest <code>${{ steps.diff.outputs.VERSION_NUMBER }}</code> version of the Buildroot LTS release:</p><ul><li><a href='https://buildroot.org/news.html#:~:text=${{ steps.diff.outputs.VERSION_NUMBER }}%20released'>Announcement</a></li><li><a href='https://gitlab.com/buildroot.org/buildroot/-/blob/${{ steps.diff.outputs.VERSION_NUMBER }}/CHANGES'>Changelog</a></li></ul>" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ github.token }}
+        if: steps.diff.outputs.VERSION_UPDATED == 1
+
+      - name: Update existing PR details (if PR exists)
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.request('PATCH /repos/{owner}/{repo}/issues/{issue_number}', {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ steps.pr.outputs.EXISTING_PR_NUM }},
+              title: "${{ steps.pr.outputs.PR_TITLE }}",
+              body: "${{ steps.pr.outputs.PR_BODY }}"
+            })
+        if: steps.diff.outputs.VERSION_UPDATED == 1 && steps.pr.outputs.EXISTING_PR_NUM != ''
+
+      - name: Create PR (if none exists)
+        run: |
+          gh pr create --base "main" --title "${{ steps.pr.outputs.PR_TITLE }}" --body "${{ steps.pr.outputs.PR_BODY }}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+        if: steps.diff.outputs.VERSION_UPDATED == 1 && steps.pr.outputs.EXISTING_PR_NUM == ''
+
+      - name: Update Github Actions summary with link to PR
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -n "${{ steps.pr.outputs.EXISTING_PR_NUM }}" ]; then
+            echo "➡️ Updated existing PR [#${{ steps.pr.outputs.EXISTING_PR_NUM }}](https://github.com/${{ github.repository }}/pull/${{ steps.pr.outputs.EXISTING_PR_NUM }})" | tee -a $GITHUB_STEP_SUMMARY
+          else
+            NEW_PR_NUM=$(gh pr list --head $BRANCH_NAME | sed 's/^\([0-9]*\).*/\1/g' | head -n 1)
+            echo "➡️ Created new PR [#${NEW_PR_NUM}](https://github.com/${{ github.repository }}/pull/${NEW_PR_NUM})" | tee -a $GITHUB_STEP_SUMMARY
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+        if: steps.diff.outputs.VERSION_UPDATED == 1
