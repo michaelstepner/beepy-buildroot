@@ -49,7 +49,10 @@ jobs:
       #######################
 
       - name: Upgrade buildroot
-        run: ./upgrade_buildroot/upgrade_buildroot.py | tee -a $GITHUB_STEP_SUMMARY
+        run: |
+          set -o pipefail
+          ./upgrade_buildroot/upgrade_buildroot.py | tee -a $GITHUB_STEP_SUMMARY
+        shell: bash
 
       #######################
       # Push
