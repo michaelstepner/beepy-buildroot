@@ -2,16 +2,27 @@
 from bs4 import BeautifulSoup
 import fileinput
 import re
-import requests
+import subprocess
+
+def fetch_html_with_curl(url: str) -> str:
+    try:
+        result = subprocess.run(
+            ["curl", "-sL", url],  # Silent, follow redirects
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return result.stdout  # HTML content
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"Failed to fetch URL with curl: {e}")
 
 def find_latest_buildroot_LTS(url: str = "https://buildroot.org/downloads/") -> str:
     # Scrape URL
-    response = requests.get(url)
-    response.raise_for_status()
     print(f"## Checking releases at {url}")
+    html = fetch_html_with_curl(url)
 
     # Parse the HTML
-    soup = BeautifulSoup(response.text, 'html.parser')
+    soup = BeautifulSoup(html, 'html.parser')
 
     # Regex to match the filenames corresponding to a buildroot LTS release
     buildroot_pattern = re.compile(r"^buildroot-(\d{4})\.02(?:\.(\d+))?\.tar\.xz$")
