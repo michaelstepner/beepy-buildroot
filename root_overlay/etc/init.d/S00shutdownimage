@@ -1,0 +1,35 @@
+#!/bin/sh
+#
+# Display custom image as shutdown screen.
+#
+
+umask 077
+
+start() {
+        echo "OK"
+}
+stop() {
+        sudo -u beepy tmux kill-server ; pkill -f tmux
+        dd if=/opt/shutdownimage.fb of=/dev/fb1 bs=384000 count=1
+}
+restart() {
+        stop
+        start
+}
+
+case "$1" in
+  start)
+        start
+        ;;
+  stop)
+        stop
+        ;;
+  restart|reload)
+        restart
+        ;;
+  *)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+esac
+
+exit $?
