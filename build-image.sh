@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-buildroot_version="2024.02.8"
+buildroot_version="2024.02.9"
 
 # Apply customizations
 if [ -f customization.json ]; then
