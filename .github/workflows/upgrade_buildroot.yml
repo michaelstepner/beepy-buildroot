@@ -10,6 +10,7 @@ env:
 
 jobs:
   upgrade_buildroot:
+    if: ${{ github.event.repository.name == 'beepy-buildroot' }}
     permissions:
       contents: write
       pull-requests: write
