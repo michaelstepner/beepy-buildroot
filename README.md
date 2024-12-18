@@ -1,3 +1,5 @@
+[![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+
 # Beepy: Build-Your-Own Buildroot OS
 
 This repository provides a lightweight [Buildroot-based](#about-beepys-buildroot-os) OS image for your Beepy, and a friendly user interface to help you generate a personalized OS image.
