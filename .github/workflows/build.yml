@@ -87,7 +87,7 @@ jobs:
     - name: Set up BTRFS file system with compression
       run: |
         df -h
-        dd if=/dev/zero of=../virtual_disk.img bs=1M count=12288
+        dd if=/dev/zero of=../virtual_disk.img bs=1M count=16384
         sudo mkfs.btrfs ../virtual_disk.img
         sudo mkdir /mnt/virtual-btrfs
         sudo mount -o loop,compress=zstd ../virtual_disk.img /mnt/virtual-btrfs
@@ -116,6 +116,7 @@ jobs:
         df -h
         sudo btrfs filesystem usage /mnt/virtual-btrfs
         sudo btrfs filesystem df /mnt/virtual-btrfs
+      if: always()
 
     - name: Upload SD card image as GitHub Actions artifact
       uses: actions/upload-artifact@v4
