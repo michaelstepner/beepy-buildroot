@@ -99,7 +99,11 @@ jobs:
         # which ensures we don't exceed the space provided on GitHub-hosted runners.
         # The disk space available is smaller in private repos than in public repos.
         sudo systemctl stop docker
-        jq '. + { "storage-driver": "btrfs", "data-root": "/mnt/virtual-btrfs" }' /etc/docker/daemon.json | sudo tee /etc/docker/daemon.json.tmp && sudo mv /etc/docker/daemon.json.tmp /etc/docker/daemon.json
+        if [ -f /etc/docker/daemon.json ]; then
+          jq '. + { "storage-driver": "btrfs", "data-root": "/mnt/virtual-btrfs" }' /etc/docker/daemon.json | sudo tee /etc/docker/daemon.json.tmp && sudo mv /etc/docker/daemon.json.tmp /etc/docker/daemon.json
+        else
+          jq -n '{ "storage-driver": "btrfs", "data-root": "/mnt/virtual-btrfs" }' | sudo tee /etc/docker/daemon.json
+        fi
         sudo systemctl start docker
         docker info
 
@@ -116,6 +120,7 @@ jobs:
         df -h
         sudo btrfs filesystem usage /mnt/virtual-btrfs
         sudo btrfs filesystem df /mnt/virtual-btrfs
+      if: ${{ !cancelled() }}
 
     - name: Upload SD card image as GitHub Actions artifact
       uses: actions/upload-artifact@v4
