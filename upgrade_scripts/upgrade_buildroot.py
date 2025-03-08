@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.13"
+# dependencies = [
+#     "beautifulsoup4",
+# ]
+# ///
 from bs4 import BeautifulSoup
 import fileinput
 import re

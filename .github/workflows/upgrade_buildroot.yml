@@ -35,15 +35,10 @@ jobs:
             git checkout -b $BRANCH_NAME
           fi
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Install uv to manage Python
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: '3.12'
-
-      - name: Install Python dependencies
-        run: |
-          python3 -m pip install --upgrade pip
-          pip install beautifulsoup4
+          version: "latest"
 
       #######################
       # Upgrade
@@ -52,7 +47,7 @@ jobs:
       - name: Upgrade buildroot
         run: |
           set -o pipefail
-          ./upgrade_scripts/upgrade_buildroot.py | tee -a $GITHUB_STEP_SUMMARY
+          uv run ./upgrade_scripts/upgrade_buildroot.py | tee -a $GITHUB_STEP_SUMMARY
         shell: bash
 
       #######################
