@@ -52,7 +52,7 @@ jobs:
       - name: Upgrade buildroot
         run: |
           set -o pipefail
-          ./upgrade_buildroot/upgrade_buildroot.py | tee -a $GITHUB_STEP_SUMMARY
+          ./upgrade_scripts/upgrade_buildroot.py | tee -a $GITHUB_STEP_SUMMARY
         shell: bash
 
       #######################
