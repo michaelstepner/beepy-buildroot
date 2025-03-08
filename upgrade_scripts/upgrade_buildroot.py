@@ -10,6 +10,7 @@ import fileinput
 import re
 import subprocess
 
+
 def fetch_html_with_curl(url: str) -> str:
     try:
         result = subprocess.run(
@@ -22,26 +23,27 @@ def fetch_html_with_curl(url: str) -> str:
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"Failed to fetch URL with curl: {e}")
 
+
 def find_latest_buildroot_LTS(url: str = "https://buildroot.org/downloads/") -> str:
     # Scrape URL
     print(f"## Checking releases at {url}")
     html = fetch_html_with_curl(url)
 
     # Parse the HTML
-    soup = BeautifulSoup(html, 'html.parser')
+    soup = BeautifulSoup(html, "html.parser")
 
     # Regex to match the filenames corresponding to a buildroot LTS release
     buildroot_pattern = re.compile(r"^buildroot-(\d{4})\.02(?:\.(\d+))?\.tar\.xz$")
 
     # Extract all releases matching the pattern
     buildroot_versions = []
-    for link in soup.find_all('a', href=True):
-        match = buildroot_pattern.match(link['href'])
+    for link in soup.find_all("a", href=True):
+        match = buildroot_pattern.match(link["href"])
         if match:
             year = int(match.group(1))
             patch = int(match.group(2)) if match.group(2) else 0
-            filename = link['href']
-            release_date = link.parent.find_next('td').get_text()
+            filename = link["href"]
+            release_date = link.parent.find_next("td").get_text()
             # print(f"Found {filename} released on {release_date}")
             buildroot_versions.append((year, patch, filename, release_date))
 
@@ -61,26 +63,28 @@ def find_latest_buildroot_LTS(url: str = "https://buildroot.org/downloads/") -> 
 def update_script(latest_version: str, script_path: str = "build-image.sh") -> None:
     # Update the build-image.sh script with the latest version
     version_pattern = re.compile(r'^(buildroot_version=")\d{4}\.02(?:\.\d+)?(")$')
-    
+
     updated = False
     changed = False
     with fileinput.FileInput(script_path, inplace=True) as file:
         for line in file:
             match = version_pattern.match(line)
             if match:
-                updated_line = f'{match.group(1)}{latest_version}{match.group(2)}'
-                print(updated_line, end='\n')
+                updated_line = f"{match.group(1)}{latest_version}{match.group(2)}"
+                print(updated_line, end="\n")
                 updated = True
                 if match.group(0) != updated_line:
                     changed = True
             else:
-                print(line, end='')
+                print(line, end="")
 
     if updated:
         if changed:
             print(f"\n🆕 {script_path} updated to use the latest buildroot LTS version")
         else:
-            print(f"\n✅ Already using the latest buildroot LTS version in {script_path}")
+            print(
+                f"\n✅ Already using the latest buildroot LTS version in {script_path}"
+            )
     else:
         raise ValueError(f"Could not find the buildroot_version line in {script_path}")
 
