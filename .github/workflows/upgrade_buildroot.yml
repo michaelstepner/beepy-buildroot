@@ -24,17 +24,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Create/checkout new branch
-        run: |
-          branch_exists=$(git ls-remote --heads origin $BRANCH_NAME | wc -l)
-          if [ $branch_exists -eq 1 ]; then
-            git remote set-branches origin $BRANCH_NAME
-            git fetch --depth 1 origin $BRANCH_NAME
-            git checkout $BRANCH_NAME
-          else
-            git checkout -b $BRANCH_NAME
-          fi
-
       - name: Install uv to manage Python
         uses: astral-sh/setup-uv@v5
         with:
@@ -49,6 +38,7 @@ jobs:
       - name: Upgrade buildroot
         run: |
           set -o pipefail
+          ./upgrade_scripts/git_checkout_or_create_branch.sh $BRANCH_NAME
           uv run ./upgrade_scripts/upgrade_buildroot.py | tee -a $GITHUB_STEP_SUMMARY
         shell: bash
 
