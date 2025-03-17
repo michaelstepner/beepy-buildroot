@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 import fileinput
 import re
 import subprocess
+import json
 
 
 def fetch_html_with_curl(url: str) -> str:
@@ -60,7 +61,7 @@ def find_latest_buildroot_LTS(url: str = "https://buildroot.org/downloads/") -> 
         raise ValueError("No matching versions found.")
 
 
-def update_script(latest_version: str, script_path: str = "build-image.sh") -> None:
+def update_script(latest_version: str, script_path: str = "build-image.sh") -> bool:
     # Update the build-image.sh script with the latest version
     version_pattern = re.compile(r'^(buildroot_version=")\d{4}\.02(?:\.\d+)?(")$')
 
@@ -88,7 +89,25 @@ def update_script(latest_version: str, script_path: str = "build-image.sh") -> N
     else:
         raise ValueError(f"Could not find the buildroot_version line in {script_path}")
 
+    return changed
+
+
+def write_to_json(
+    latest_version: str,
+    updated: bool,
+    json_path: str = "upgrade_scripts/upgrade_status.json",
+) -> None:
+    """Write the latest version and update status to a JSON file."""
+
+    # Create JSON data
+    data = {"version_number": latest_version, "version_updated": updated}
+
+    # Write to JSON file
+    with open(json_path, "w") as f:
+        json.dump(data, f, indent=2)
+
 
 if __name__ == "__main__":
     latest_version = find_latest_buildroot_LTS()
-    update_script(latest_version)
+    updated = update_script(latest_version)
+    write_to_json(latest_version, updated)

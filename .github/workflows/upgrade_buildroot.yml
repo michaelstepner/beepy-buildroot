@@ -36,25 +36,20 @@ jobs:
       #######################
 
       - name: Upgrade buildroot
+        id: upgrade
         run: |
           set -o pipefail
+          
           ./upgrade_scripts/git_checkout_or_create_branch.sh $BRANCH_NAME
           uv run ./upgrade_scripts/upgrade_buildroot.py | tee -a $GITHUB_STEP_SUMMARY
+          
+          echo "VERSION_NUMBER=$(jq -r '.version_number' upgrade_scripts/upgrade_status.json)" >> $GITHUB_OUTPUT
+          echo "VERSION_UPDATED=$(jq -r '.version_updated' upgrade_scripts/upgrade_status.json)" >> $GITHUB_OUTPUT
         shell: bash
 
       #######################
       # Push
       #######################
-
-      - name: Check if there are changes
-        id: diff
-        run: |
-          set +e
-          test -z "$(git status --porcelain build-image.sh)"
-          echo "VERSION_UPDATED=$?" >> $GITHUB_OUTPUT
-
-          version_number=$(sed -n 's/^buildroot_version="\([^"]*\)"/\1/p' build-image.sh)
-          echo "VERSION_NUMBER=$version_number" >> $GITHUB_OUTPUT
 
       - name: Commit new data and push to Github
         run: |
@@ -67,13 +62,13 @@ jobs:
           if [ $branch_exists -eq 1 ]; then
             git branch --set-upstream-to origin/$BRANCH_NAME
             git pull --ff-only
-            git commit -m "chore: upgrade buildroot to ${{ steps.diff.outputs.VERSION_NUMBER }}"
+            git commit -m "chore: upgrade buildroot to ${{ steps.upgrade.outputs.VERSION_NUMBER }}"
             git push origin $BRANCH_NAME
           else
-            git commit -m "chore: upgrade buildroot to ${{ steps.diff.outputs.VERSION_NUMBER }}"
+            git commit -m "chore: upgrade buildroot to ${{ steps.upgrade.outputs.VERSION_NUMBER }}"
             git push --set-upstream origin $BRANCH_NAME
           fi
-        if: steps.diff.outputs.VERSION_UPDATED == 1
+        if: steps.upgrade.outputs.VERSION_UPDATED == 'true'
 
       #######################
       # Pull Request
@@ -83,11 +78,11 @@ jobs:
         id: pr
         run: |
           echo "EXISTING_PR_NUM=$(gh pr list --head $BRANCH_NAME | sed 's/^\([0-9]*\).*/\1/g' | head -n 1)" >> $GITHUB_OUTPUT
-          echo "PR_TITLE=chore: upgrade buildroot to ${{ steps.diff.outputs.VERSION_NUMBER }}" >> $GITHUB_OUTPUT
-          echo "PR_BODY=<p>Upgrade to the latest <code>${{ steps.diff.outputs.VERSION_NUMBER }}</code> version of the Buildroot LTS release:</p><ul><li><a href='https://buildroot.org/news.html#:~:text=${{ steps.diff.outputs.VERSION_NUMBER }}%20released'>Announcement</a></li><li><a href='https://gitlab.com/buildroot.org/buildroot/-/blob/${{ steps.diff.outputs.VERSION_NUMBER }}/CHANGES'>Changelog</a></li></ul>" >> $GITHUB_OUTPUT
+          echo "PR_TITLE=chore: upgrade buildroot to ${{ steps.upgrade.outputs.VERSION_NUMBER }}" >> $GITHUB_OUTPUT
+          echo "PR_BODY=<p>Upgrade to the latest <code>${{ steps.upgrade.outputs.VERSION_NUMBER }}</code> version of the Buildroot LTS release:</p><ul><li><a href='https://buildroot.org/news.html#:~:text=${{ steps.upgrade.outputs.VERSION_NUMBER }}%20released'>Announcement</a></li><li><a href='https://gitlab.com/buildroot.org/buildroot/-/blob/${{ steps.upgrade.outputs.VERSION_NUMBER }}/CHANGES'>Changelog</a></li></ul>" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ github.token }}
-        if: steps.diff.outputs.VERSION_UPDATED == 1
+        if: steps.upgrade.outputs.VERSION_UPDATED == 'true'
 
       - name: Update existing PR details (if PR exists)
         uses: actions/github-script@v7
@@ -100,14 +95,14 @@ jobs:
               title: "${{ steps.pr.outputs.PR_TITLE }}",
               body: "${{ steps.pr.outputs.PR_BODY }}"
             })
-        if: steps.diff.outputs.VERSION_UPDATED == 1 && steps.pr.outputs.EXISTING_PR_NUM != ''
+        if: steps.upgrade.outputs.VERSION_UPDATED == 'true' && steps.pr.outputs.EXISTING_PR_NUM != ''
 
       - name: Create PR (if none exists)
         run: |
           gh pr create --base "main" --title "${{ steps.pr.outputs.PR_TITLE }}" --body "${{ steps.pr.outputs.PR_BODY }}"
         env:
           GH_TOKEN: ${{ github.token }}
-        if: steps.diff.outputs.VERSION_UPDATED == 1 && steps.pr.outputs.EXISTING_PR_NUM == ''
+        if: steps.upgrade.outputs.VERSION_UPDATED == 'true' && steps.pr.outputs.EXISTING_PR_NUM == ''
 
       - name: Update Github Actions summary with link to PR
         run: |
@@ -120,4 +115,4 @@ jobs:
           fi
         env:
           GH_TOKEN: ${{ github.token }}
-        if: steps.diff.outputs.VERSION_UPDATED == 1
+        if: steps.upgrade.outputs.VERSION_UPDATED == 'true'
