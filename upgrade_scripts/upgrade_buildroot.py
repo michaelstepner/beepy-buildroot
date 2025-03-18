@@ -105,6 +105,7 @@ def write_to_json(
         "version_updated": updated,
         "commit_message": f"chore: upgrade buildroot to {latest_version}",
         "files_modified": ["build-image.sh"],
+        "pr_body": f"<p>Upgrade to the latest <code>{latest_version}</code> version of the Buildroot LTS release:</p><ul><li><a href='https://buildroot.org/news.html#:~:text={latest_version}%20released'>Announcement</a></li><li><a href='https://gitlab.com/buildroot.org/buildroot/-/blob/{latest_version}/CHANGES'>Changelog</a></li></ul>"
     }
 
     # Write to JSON file

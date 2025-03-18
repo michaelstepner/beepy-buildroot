@@ -17,10 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      #######################
-      # Configure
-      #######################
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -31,10 +27,6 @@ jobs:
           cache-dependency-glob: |
             upgrade_scripts/*.py
 
-      #######################
-      # Upgrade
-      #######################
-
       - name: Upgrade buildroot
         id: upgrade
         run: |
@@ -43,65 +35,18 @@ jobs:
           ./upgrade_scripts/git_checkout_or_create_branch.sh $BRANCH_NAME
           uv run ./upgrade_scripts/upgrade_buildroot.py | tee -a $GITHUB_STEP_SUMMARY
           
-          echo "VERSION_NUMBER=$(jq -r '.version_number' upgrade_scripts/upgrade_status.json)" >> $GITHUB_OUTPUT
           echo "VERSION_UPDATED=$(jq -r '.version_updated' upgrade_scripts/upgrade_status.json)" >> $GITHUB_OUTPUT
         shell: bash
 
-      #######################
-      # Push
-      #######################
-
-      - name: Commit new data and push to Github
+      - name: Commit modified files, push to Github, and create/update PR
         run: |
           git config user.name github-actions[bot]
           git config user.email github-actions@github.com
 
           ./upgrade_scripts/git_add_and_push.sh -c upgrade_scripts/upgrade_status.json
-        if: steps.upgrade.outputs.VERSION_UPDATED == 'true'
-
-      #######################
-      # Pull Request
-      #######################
-
-      - name: Get existing PR number if it exists
-        id: pr
-        run: |
-          echo "EXISTING_PR_NUM=$(gh pr list --head $BRANCH_NAME | sed 's/^\([0-9]*\).*/\1/g' | head -n 1)" >> $GITHUB_OUTPUT
-          echo "PR_TITLE=chore: upgrade buildroot to ${{ steps.upgrade.outputs.VERSION_NUMBER }}" >> $GITHUB_OUTPUT
-          echo "PR_BODY=<p>Upgrade to the latest <code>${{ steps.upgrade.outputs.VERSION_NUMBER }}</code> version of the Buildroot LTS release:</p><ul><li><a href='https://buildroot.org/news.html#:~:text=${{ steps.upgrade.outputs.VERSION_NUMBER }}%20released'>Announcement</a></li><li><a href='https://gitlab.com/buildroot.org/buildroot/-/blob/${{ steps.upgrade.outputs.VERSION_NUMBER }}/CHANGES'>Changelog</a></li></ul>" >> $GITHUB_OUTPUT
+          ./upgrade_scripts/github_pr_create_or_update.sh -c upgrade_scripts/upgrade_status.json
         env:
           GH_TOKEN: ${{ github.token }}
-        if: steps.upgrade.outputs.VERSION_UPDATED == 'true'
-
-      - name: Update existing PR details (if PR exists)
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.request('PATCH /repos/{owner}/{repo}/issues/{issue_number}', {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: ${{ steps.pr.outputs.EXISTING_PR_NUM }},
-              title: "${{ steps.pr.outputs.PR_TITLE }}",
-              body: "${{ steps.pr.outputs.PR_BODY }}"
-            })
-        if: steps.upgrade.outputs.VERSION_UPDATED == 'true' && steps.pr.outputs.EXISTING_PR_NUM != ''
-
-      - name: Create PR (if none exists)
-        run: |
-          gh pr create --base "main" --title "${{ steps.pr.outputs.PR_TITLE }}" --body "${{ steps.pr.outputs.PR_BODY }}"
-        env:
-          GH_TOKEN: ${{ github.token }}
-        if: steps.upgrade.outputs.VERSION_UPDATED == 'true' && steps.pr.outputs.EXISTING_PR_NUM == ''
-
-      - name: Update Github Actions summary with link to PR
-        run: |
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [ -n "${{ steps.pr.outputs.EXISTING_PR_NUM }}" ]; then
-            echo "➡️ Updated existing PR [#${{ steps.pr.outputs.EXISTING_PR_NUM }}](https://github.com/${{ github.repository }}/pull/${{ steps.pr.outputs.EXISTING_PR_NUM }})" | tee -a $GITHUB_STEP_SUMMARY
-          else
-            NEW_PR_NUM=$(gh pr list --head $BRANCH_NAME | sed 's/^\([0-9]*\).*/\1/g' | head -n 1)
-            echo "➡️ Created new PR [#${NEW_PR_NUM}](https://github.com/${{ github.repository }}/pull/${NEW_PR_NUM})" | tee -a $GITHUB_STEP_SUMMARY
-          fi
-        env:
-          GH_TOKEN: ${{ github.token }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         if: steps.upgrade.outputs.VERSION_UPDATED == 'true'
