@@ -1,0 +1,19 @@
+--- module/src/drm_iface.c	2025-03-18 00:00:00.000000000 +0000
++++ module/src/drm_iface.c	2025-03-18 00:00:00.000000000 +0000
+@@ -26,6 +26,7 @@
+ #include <drm/drm_rect.h>
+ #include <drm/drm_probe_helper.h>
+ #include <drm/drm_simple_kms_helper.h>
++#include <drm/drm_fbdev_generic.h>
+ 
+ #include "params_iface.h"
+ #include "ioctl_iface.h"
+@@ -419,7 +420,7 @@
+ static int sharp_memory_pipe_prepare_fb(struct drm_simple_display_pipe *pipe,
+ 	struct drm_plane_state *plane_state)
+ {
+-	return drm_gem_simple_display_pipe_prepare_fb(pipe, plane_state);
++	return drm_gem_plane_helper_prepare_fb(&pipe->plane, plane_state);
+ }
+ 
+ static void sharp_memory_pipe_cleanup_fb(struct drm_simple_display_pipe *pipe, 
