@@ -100,7 +100,12 @@ def write_to_json(
     """Write the latest version and update status to a JSON file."""
 
     # Create JSON data
-    data = {"version_number": latest_version, "version_updated": updated}
+    data = {
+        "version_number": latest_version,
+        "version_updated": updated,
+        "commit_message": f"chore: upgrade buildroot to {latest_version}",
+        "files_modified": ["build-image.sh"],
+    }
 
     # Write to JSON file
     with open(json_path, "w") as f:

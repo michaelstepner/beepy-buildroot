@@ -56,18 +56,7 @@ jobs:
           git config user.name github-actions[bot]
           git config user.email github-actions@github.com
 
-          git add build-image.sh
-
-          branch_exists=$(git ls-remote --heads origin $BRANCH_NAME | wc -l)
-          if [ $branch_exists -eq 1 ]; then
-            git branch --set-upstream-to origin/$BRANCH_NAME
-            git pull --ff-only
-            git commit -m "chore: upgrade buildroot to ${{ steps.upgrade.outputs.VERSION_NUMBER }}"
-            git push origin $BRANCH_NAME
-          else
-            git commit -m "chore: upgrade buildroot to ${{ steps.upgrade.outputs.VERSION_NUMBER }}"
-            git push --set-upstream origin $BRANCH_NAME
-          fi
+          ./upgrade_scripts/git_add_and_push.sh -c upgrade_scripts/upgrade_status.json
         if: steps.upgrade.outputs.VERSION_UPDATED == 'true'
 
       #######################
