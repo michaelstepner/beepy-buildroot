@@ -2,7 +2,6 @@
 	path = beepy_drivers/package/sharp-drm/module
 	url = git@github.com:ardangelo/sharp-drm-driver.git
 	branch = master
-
 [submodule "bb_drivers/package/bbqX0kbd"]
 	path = beepy_drivers/package/beepy-kbd/module
 	url = git@github.com:ardangelo/beepberry-keyboard-driver.git
