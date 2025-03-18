@@ -2,7 +2,6 @@
 	path = beepy_drivers/package/sharp-drm/module
 	url = git@github.com:ardangelo/sharp-drm-driver.git
 	branch = master
-
 [submodule "bb_drivers/package/bbqX0kbd"]
 	path = beepy_drivers/package/beepy-kbd/module
 	url = git@github.com:ardangelo/beepberry-keyboard-driver.git
@@ -10,6 +9,8 @@
 [submodule "beepy_drivers/package/beepy-symbol-overlay/module"]
 	path = beepy_drivers/package/beepy-symbol-overlay/module
 	url = git@github.com:ardangelo/beepy-symbol-overlay.git
+	branch = master
 [submodule "beepy_drivers/package/beepy-tmux-menus/module"]
 	path = beepy_drivers/package/beepy-tmux-menus/module
 	url = git@github.com:ardangelo/tmux-menus.git
+	branch = main
