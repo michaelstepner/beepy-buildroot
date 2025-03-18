@@ -1,0 +1,11 @@
+--- module/src/main.c	2025-03-18 00:00:00.000000000 +0000
++++ module/src/main.c	2025-03-18 00:00:00.000000000 +0000
+@@ -23,7 +23,7 @@
+ #error "Only supporting BBQ20 keyboard right now"
+ #endif
+ 
+-static int beepy_kbd_probe(struct i2c_client* i2c_client, struct i2c_device_id const* i2c_id)
++static int beepy_kbd_probe(struct i2c_client* i2c_client)
+ {
+ 	int rc;
+ } 

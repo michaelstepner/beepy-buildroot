@@ -1,0 +1,12 @@
+--- module/src/sysfs_iface.c	2025-03-18 00:00:00.000000000 +0000
++++ module/src/sysfs_iface.c	2025-03-18 00:00:00.000000000 +0000
+@@ -316,7 +316,7 @@
+ 	return count;
+ }
+ 
+-static void beepy_get_ownership(struct kobject *kobj, kuid_t *uid, kgid_t *gid)
++static void beepy_get_ownership(const struct kobject *kobj, kuid_t *uid, kgid_t *gid)
+ {
+ 	*uid = GLOBAL_ROOT_UID;
+ 	*gid = GLOBAL_ROOT_GID;
+ } 
