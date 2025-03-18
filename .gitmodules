@@ -9,6 +9,8 @@
 [submodule "beepy_drivers/package/beepy-symbol-overlay/module"]
 	path = beepy_drivers/package/beepy-symbol-overlay/module
 	url = git@github.com:ardangelo/beepy-symbol-overlay.git
+	branch = master
 [submodule "beepy_drivers/package/beepy-tmux-menus/module"]
 	path = beepy_drivers/package/beepy-tmux-menus/module
 	url = git@github.com:ardangelo/tmux-menus.git
+	branch = main
