@@ -36,12 +36,10 @@ fi
 # Add modified files
 jq -r '.files_modified[]' "$config_file" | xargs git add
 
-# Set up branch tracking and sync with remote if it exists, otherwise create new branch
+# Set up branch tracking and sync with remote if it exists
 if git ls-remote --heads origin "$BRANCH_NAME" | grep -q .; then
     git branch --set-upstream-to "origin/$BRANCH_NAME"
     git pull --ff-only
-else
-    git checkout -b "$BRANCH_NAME"
 fi
 
 git commit -m "$(jq -r '.commit_message' "$config_file")"
