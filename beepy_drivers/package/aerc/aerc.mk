@@ -1,4 +1,4 @@
-AERC_VERSION = 0.5.2
+AERC_VERSION = 0.20.1
 AERC_SOURCE = $(AERC_VERSION).tar.gz
 AERC_SITE = https://git.sr.ht/~rjarry/aerc/archive
 
@@ -6,6 +6,7 @@ AERC_DEPENDENCIES = host-go notmuch
 
 define AERC_BUILD_CMDS
 	GOPROXY=https://proxy.golang.org GOOS=linux GOARCH=arm GOFLAGS="-tags=notmuch -buildvcs=false" CGO_ENABLED=1 \
+		CC="$(TARGET_CC)" \
 		$(TARGET_MAKE_ENV) $(MAKE) -C $(@D)
 endef
 
