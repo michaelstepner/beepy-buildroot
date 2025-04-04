@@ -28,4 +28,4 @@
 +	./mktable-host 100 functable.tab > $@
  	-rm -f functable.tab
  
- $(BOOKMARKER): w3mbookmark.o dummy.o $(ALIB)
+ mktable$(EXT): mktable.o dummy.o Str.o hash.o myctype.o
