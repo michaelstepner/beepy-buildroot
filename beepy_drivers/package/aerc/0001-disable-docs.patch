@@ -1,0 +1,11 @@
+--- aerc-0.20.1/GNUmakefile
++++ aerc-0.20.1/GNUmakefile
+@@ -26,7 +26,7 @@
+ man1 = $(subst .scd,,$(notdir $(wildcard doc/*.1.scd)))
+ man5 = $(subst .scd,,$(notdir $(wildcard doc/*.5.scd)))
+ man7 = $(subst .scd,,$(notdir $(wildcard doc/*.7.scd)))
+-docs = $(man1) $(man5) $(man7)
++docs =
+ cfilters = $(subst .c,,$(notdir $(wildcard filters/*.c)))
+ filters = $(filter-out filters/vectors filters/test.sh filters/%.c,$(wildcard filters/*))
+ gofumpt_tag = v0.7.0
